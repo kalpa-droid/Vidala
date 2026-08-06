@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vidala-v2';
+const CACHE_NAME = 'vidala-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -21,7 +21,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache abierto: vidala-v2');
+        console.log('Cache abierto: vidala-v3');
         return cache.addAll(urlsToCache);
       })
       .then(() => self.skipWaiting())
