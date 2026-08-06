@@ -1,0 +1,16 @@
+# Archivos de desarrollo original (no necesarios para la web)
+*.pptx
+*.docx
+*.pdf
+*.svg
+*.sozi.html
+*.sozi.json
+
+# Audio original con espacios
+Mariana Carrizo - Doña Ubenza.mp3
+
+# Sistema y SO
+.DS_Store
+Thumbs.db
+*.log
+.vercel
