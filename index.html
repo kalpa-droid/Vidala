@@ -718,12 +718,48 @@
             }
         });
 
-        // === SERVICE WORKER ===
+        // === SERVICE WORKER — registro + auto-actualización ===
         if ('serviceWorker' in navigator) {
+            var swRefreshing = false;
+
+            // Cuando el nuevo Service Worker toma el control (porque
+            // detectó una versión distinta), la página activa ya quedó
+            // vieja: la recargamos una sola vez para traer todo fresco.
+            navigator.serviceWorker.addEventListener('controllerchange', function() {
+                if (swRefreshing) return;
+                swRefreshing = true;
+                showToast('🔄 Nueva versión disponible, actualizando...', 1500);
+                setTimeout(function() {
+                    window.location.reload();
+                }, 900);
+            });
+
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('sw.js')
-                    .then(function(reg) { console.log('SW registrado:', reg.scope); })
-                    .catch(function(err) { console.log('Error SW:', err); });
+                navigator.serviceWorker.register('sw.js').then(function(reg) {
+                    console.log('SW registrado:', reg.scope);
+
+                    // Revisar de inmediato si hay una versión más nueva
+                    // de sw.js (esto es lo que dispara todo el proceso
+                    // de actualización si cambiamos CACHE_NAME).
+                    reg.update();
+
+                    // Volver a revisar cada vez que la app pasa a
+                    // primer plano (ej: la abrís desde el ícono luego
+                    // de tenerla en segundo plano un rato).
+                    document.addEventListener('visibilitychange', function() {
+                        if (document.visibilityState === 'visible') {
+                            reg.update();
+                        }
+                    });
+
+                    // Y una revisión periódica mientras esté abierta,
+                    // por si queda mucho tiempo en primer plano.
+                    setInterval(function() {
+                        reg.update();
+                    }, 60 * 60 * 1000); // cada 1 hora
+                }).catch(function(err) {
+                    console.log('Error SW:', err);
+                });
             });
         }
 
