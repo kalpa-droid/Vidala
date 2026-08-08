@@ -651,16 +651,27 @@
         });
 
         // === NAVIGATION (Sozi) ===
+        // moveToPrevious() only exists on sozi.playerController (it does
+        // the smart "jump to last non-auto-transition frame" logic used
+        // by right-click/keyboard-left natively). It does NOT exist on
+        // sozi.player itself — that's why the back button was silently
+        // failing while moveToNext (which exists on both) worked fine.
         function soziCommand(method) {
             try {
                 var soziWin = soziFrame.contentWindow;
-                if (soziWin && soziWin.sozi && soziWin.sozi.player) {
-                    soziWin.sozi.player[method]();
+                if (!soziWin || !soziWin.sozi) return;
+                var controller = soziWin.sozi.playerController;
+                var player = soziWin.sozi.player;
+                if (controller && typeof controller[method] === 'function') {
+                    controller[method]();
+                } else if (player && typeof player[method] === 'function') {
+                    player[method]();
                 }
             } catch(e) {
                 console.log('Sozi navigation error:', e);
             }
         }
+
 
         btnPrev.addEventListener('click', function() {
             soziCommand('moveToPrevious');
