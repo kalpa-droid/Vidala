@@ -590,8 +590,27 @@
             lockLandscape();
             updateStageOrientation();
 
-            // Load the Sozi presentation
-            soziFrame.src = 'presentacion.html';
+            // Load the Sozi presentation — forward any deep-link hash
+            // from the outer URL (e.g. vidala.vercel.app/#frame9294)
+            // into the iframe, since Sozi reads location.hash from its
+            // own window, not the parent page's.
+            soziFrame.src = 'presentacion.html' + (window.location.hash || '');
+
+            // Mantener sincronizada la URL externa con el frame actual
+            // de la presentación, para que compartir el link siga
+            // llevando directo a esa diapositiva en el futuro.
+            soziFrame.addEventListener('load', function syncHashOnce() {
+                try {
+                    soziFrame.contentWindow.addEventListener('hashchange', function() {
+                        var innerHash = soziFrame.contentWindow.location.hash;
+                        if (innerHash && innerHash !== window.location.hash) {
+                            history.replaceState(null, '', innerHash);
+                        }
+                    });
+                } catch (e) {
+                    console.log('No se pudo sincronizar el hash del iframe:', e);
+                }
+            });
 
             // Hide welcome screen
             welcomeScreen.classList.add('hidden');
