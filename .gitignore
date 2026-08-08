@@ -3,14 +3,18 @@
 *.docx
 *.pdf
 *.svg
-*.sozi.html
 *.sozi.json
 
-# Audio original con espacios
-Mariana Carrizo - Doña Ubenza.mp3
+# Archivo Sozi original con nombre largo (usamos presentacion.html)
+Presentacion Vidala.sozi.html
+Presentacion Vidala-presenter.sozi.html
+
+# Audio original con espacios (usamos audio/musica.mp3)
+audio/Comparsa de las Mujeres (Voces Hiladas).mp3
 
 # Sistema y SO
 .DS_Store
 Thumbs.db
 *.log
 .vercel
+node_modules/

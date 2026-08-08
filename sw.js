@@ -1,11 +1,12 @@
-const CACHE_NAME = 'vidala-v2';
+const CACHE_NAME = 'vidala-v3';
 const urlsToCache = [
   '/',
   '/index.html',
+  '/presentacion.html',
   '/manifest.json',
   '/favicon.ico',
   '/apple-touch-icon.png',
-  '/audio/dona-ubenza.mp3',
+  '/audio/musica.mp3',
   '/icons/icon-72x72.png',
   '/icons/icon-96x96.png',
   '/icons/icon-128x128.png',
@@ -21,7 +22,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache abierto: vidala-v2');
+        console.log('Cache abierto: ' + CACHE_NAME);
         return cache.addAll(urlsToCache);
       })
       .then(() => self.skipWaiting())
@@ -46,7 +47,7 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-  // Handle range requests for audio separately
+  // Handle range requests for audio
   if (event.request.headers.has('range')) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
@@ -57,7 +58,6 @@ self.addEventListener('fetch', event => {
               return fetchRes;
             });
           }
-          // Build partial response from cached full response
           return res.arrayBuffer().then(ab => {
             const rangeHeader = event.request.headers.get('range');
             const matches = rangeHeader.match(/bytes=(\d+)-(\d*)/);
@@ -70,7 +70,7 @@ self.addEventListener('fetch', event => {
                 statusText: 'Partial Content',
                 headers: [
                   ['Content-Range', 'bytes ' + start + '-' + end + '/' + ab.byteLength],
-                  ['Content-Length', end - start + 1],
+                  ['Content-Length', String(end - start + 1)],
                   ['Content-Type', res.headers.get('Content-Type') || 'audio/mpeg']
                 ]
               }
@@ -89,7 +89,6 @@ self.addEventListener('fetch', event => {
           return response;
         }
         return fetch(event.request).then(response => {
-          // Only cache successful same-origin responses
           if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
           }
