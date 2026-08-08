@@ -147,38 +147,6 @@
             font-weight: 600;
         }
 
-        .rotate-hint {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-size: clamp(11px, 2vw, 14px);
-            color: var(--accent-gold);
-            margin-bottom: 24px;
-            padding: 10px 20px;
-            border: 1px solid rgba(212, 168, 85, 0.25);
-            border-radius: 50px;
-            background: rgba(212, 168, 85, 0.08);
-            animation: gentle-pulse 2s infinite ease-in-out;
-        }
-
-        @keyframes gentle-pulse {
-            0%, 100% { border-color: rgba(212, 168, 85, 0.15); }
-            50%      { border-color: rgba(212, 168, 85, 0.4); }
-        }
-
-        .rotate-icon {
-            font-size: 20px;
-            animation: rotate-hint-anim 3s infinite ease-in-out;
-        }
-
-        @keyframes rotate-hint-anim {
-            0%, 100% { transform: rotate(0deg); }
-            25%      { transform: rotate(90deg); }
-            50%      { transform: rotate(90deg); }
-            75%      { transform: rotate(0deg); }
-        }
-
         .enter-btn {
             background: linear-gradient(135deg, var(--accent-burgundy) 0%, var(--accent-rose) 50%, #d4213d 100%);
             color: #ffffff;
@@ -220,15 +188,40 @@
         }
 
         /* ============================================
-           PRESENTATION CONTAINER
+           STAGE — wraps presentation + controls so they
+           can be rotated together into forced landscape
            ============================================ */
-        #presentation-container {
+        #stage {
             position: fixed;
             top: 0; left: 0;
             width: 100vw;
             height: 100vh;
-            background: var(--bg-deep);
             z-index: 1;
+        }
+
+        /* Forced-landscape trick: rotate the whole stage 90deg and
+           swap width/height so it visually fills the screen in
+           landscape even though the phone is physically in portrait.
+           No permission, dialog or native orientation API needed. */
+        #stage.force-landscape {
+            position: fixed;
+            top: 0;
+            left: 100%;
+            width: 100vh;
+            height: 100vw;
+            transform-origin: 0 0;
+            transform: rotate(90deg);
+        }
+
+        /* ============================================
+           PRESENTATION CONTAINER
+           ============================================ */
+        #presentation-container {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-deep);
         }
 
         #presentation-container iframe {
@@ -242,7 +235,7 @@
            FLOATING CONTROLS (RIGHT SIDE)
            ============================================ */
         .controls-right {
-            position: fixed;
+            position: absolute;
             right: 14px;
             top: 50%;
             transform: translateY(-50%);
@@ -264,7 +257,7 @@
            FLOATING CONTROLS (LEFT SIDE)
            ============================================ */
         .controls-left {
-            position: fixed;
+            position: absolute;
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
@@ -422,50 +415,7 @@
             .controls-left { gap: 6px; }
         }
 
-        /* Portrait warning overlay */
-        @media (orientation: portrait) {
-            .portrait-warning {
-                display: flex !important;
-            }
-        }
-        @media (orientation: landscape) {
-            .portrait-warning {
-                display: none !important;
-            }
-        }
-
-        .portrait-warning {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(13, 4, 8, 0.95);
-            z-index: 200000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: var(--accent-cream);
-            font-family: 'Outfit', sans-serif;
-            padding: 30px;
-            gap: 16px;
-        }
-
-        .portrait-warning-icon {
-            font-size: 64px;
-            animation: rotate-hint-anim 3s infinite ease-in-out;
-        }
-
-        .portrait-warning-text {
-            font-size: 18px;
-            font-weight: 600;
-            max-width: 280px;
-        }
-
-        .portrait-warning-sub {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
+        /* Portrait warning overlay removed — landscape is now forced via CSS transform (see #stage.force-landscape) */
     </style>
 </head>
 <body>
@@ -475,15 +425,6 @@
     <audio id="bg-music" loop preload="auto">
         <source src="audio/musica.mp3" type="audio/mpeg">
     </audio>
-
-    <!-- ============================================
-         PORTRAIT ROTATION WARNING (only shown inside presentation)
-         ============================================ -->
-    <div class="portrait-warning" id="portrait-warning" style="display:none;">
-        <div class="portrait-warning-icon">📱</div>
-        <div class="portrait-warning-text">Girá tu dispositivo para ver la presentación</div>
-        <div class="portrait-warning-sub">Esta presentación se ve mejor en formato horizontal</div>
-    </div>
 
     <!-- ============================================
          WELCOME SCREEN
@@ -499,16 +440,18 @@
                 Una presentación interactiva sobre la Vidala<br>
                 y la cultura barrial de <strong>Salta, Argentina</strong>
             </p>
-            <div class="rotate-hint">
-                <span class="rotate-icon">📱</span>
-                <span>Girá el celular en horizontal para una mejor experiencia</span>
-            </div>
             <button id="btn-enter" class="enter-btn" type="button">
                 <span>▶</span> Ingresar
             </button>
             <p class="music-credit">🎵 Música: Comparsa de las Mujeres — Voces Hiladas</p>
         </div>
     </div>
+
+    <!-- ============================================
+         STAGE — presentation + controls, rotated together
+         when the device needs forced landscape
+         ============================================ -->
+    <div id="stage">
 
     <!-- ============================================
          PRESENTATION (iframe)
@@ -552,6 +495,8 @@
         </button>
     </div>
 
+    </div><!-- /#stage -->
+
     <!-- ============================================
          TOAST
          ============================================ -->
@@ -577,10 +522,11 @@
         var controlsLeft  = document.getElementById('controls-left');
         var soziFrame     = document.getElementById('sozi-frame');
         var toast         = document.getElementById('toast');
-        var portraitWarn   = document.getElementById('portrait-warning');
+        var stage         = document.getElementById('stage');
 
         var isMuted = false;
         var deferredPrompt = null;
+        var presentationStarted = false;
 
         // === Generate background particles ===
         var particlesContainer = document.getElementById('particles-container');
@@ -608,7 +554,9 @@
             }, duration || 2500);
         }
 
-        // === Try to lock screen to landscape ===
+        // === Try to lock screen to landscape (native API, works on some
+        // Android/Chrome setups). Purely a bonus — the CSS rotation below
+        // is what actually guarantees landscape everywhere else. ===
         function lockLandscape() {
             if (screen.orientation && screen.orientation.lock) {
                 screen.orientation.lock('landscape').catch(function() {
@@ -616,6 +564,15 @@
                 });
             }
         }
+
+        // === Force-landscape via CSS rotation (game-style, no prompts) ===
+        function updateStageOrientation() {
+            if (!presentationStarted) return;
+            var isPortrait = window.innerWidth < window.innerHeight;
+            stage.classList.toggle('force-landscape', isPortrait);
+        }
+        window.addEventListener('resize', updateStageOrientation);
+        window.addEventListener('orientationchange', updateStageOrientation);
 
         // === ENTER BUTTON ===
         btnEnter.addEventListener('click', function() {
@@ -626,8 +583,12 @@
                 console.log('Audio play error:', err);
             });
 
-            // Try to lock to landscape
+            presentationStarted = true;
+
+            // Try native lock first, then always apply the CSS rotation
+            // fallback so it works instantly on every device, no dialog.
             lockLandscape();
+            updateStageOrientation();
 
             // Load the Sozi presentation
             soziFrame.src = 'presentacion.html';
@@ -641,9 +602,6 @@
             // Show controls
             controlsRight.classList.add('visible');
             controlsLeft.classList.add('visible');
-
-            // Show portrait warning for mobile
-            portraitWarn.style.display = '';
 
             // Try fullscreen
             if (document.documentElement.requestFullscreen) {
