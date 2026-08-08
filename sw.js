@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vidala-v5';
+const CACHE_NAME = 'vidala-v6';
 const urlsToCache = [
   '/',
   '/index.html',
